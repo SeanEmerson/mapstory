@@ -138,6 +138,7 @@ TEMPLATE_DIRS = (
 
 # The FULLY QUALIFIED url to the GeoServer instance for this GeoNode.
 GEOSERVER_BASE_URL = "http://localhost:8001/geoserver/"
+INTERNAL_GEOSERVER_BASE_URL = GEOSERVER_BASE_URL
 
 # The username and password for a user that can add and edit layer details on GeoServer
 GEOSERVER_CREDENTIALS = "geoserver_admin", SECRET_KEY 

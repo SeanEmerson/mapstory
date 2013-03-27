@@ -24,12 +24,12 @@ def _el(n, t=None, **atts):
 def _gwc_client():
     http = httplib2.Http()
     http.add_credentials(*settings.GEOSERVER_CREDENTIALS)
-    netloc = urlparse(settings.GEOSERVER_BASE_URL).netloc
+    netloc = urlparse(settings.INTERNAL_GEOSERVER_BASE_URL).netloc
     http.authorizations.append(
         httplib2.BasicAuthentication(
             settings.GEOSERVER_CREDENTIALS,
                 netloc,
-                settings.GEOSERVER_BASE_URL,
+                settings.INTERNAL_GEOSERVER_BASE_URL,
                 {},
                 None,
                 None,
@@ -87,7 +87,7 @@ def _list_gwc_layers(client=None):
     if not client:
         client = _gwc_client()
 
-    url = settings.GEOSERVER_BASE_URL + 'gwc/rest/layers/'
+    url = settings.INTERNAL_GEOSERVER_BASE_URL + 'gwc/rest/layers/'
 
     headers, response = client.request(url, 'GET')
     if headers.status != 200: raise Exception('listing failed - %s, %s' %
@@ -122,7 +122,7 @@ def _configure_layer(typename):
 
     # searching through the list is not worth it, we know the URL and it will
     # fail otherwise
-    url = settings.GEOSERVER_BASE_URL + 'gwc/rest/layers/%s.xml' % typename
+    url = settings.INTERNAL_GEOSERVER_BASE_URL + 'gwc/rest/layers/%s.xml' % typename
 
     dom = _get_config(client, url)
     if dom is None:
@@ -166,7 +166,7 @@ def create_layer_configs(layers):
         name = template.find('name')
         name.text = l.typename
         logging.info('creating config for %s', l.typename)
-        url = settings.GEOSERVER_BASE_URL + 'gwc/rest/layers/' + l.typename + '.xml'
+        url = settings.INTERNAL_GEOSERVER_BASE_URL + 'gwc/rest/layers/' + l.typename + '.xml'
         headers, resp = client.request(url, 'PUT', tostring(template))
         if headers.status != 200:
             logging.warning('failure %s %s', headers, resp)

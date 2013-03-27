@@ -41,7 +41,7 @@ def _check_layer_capabilities(layer):
         return
     except:
         pass
-    url = settings.GEOSERVER_BASE_URL + "%s/%s/" % tuple(layer.typename.split(':'))
+    url = settings.INTERNAL_GEOSERVER_BASE_URL + "%s/%s/" % tuple(layer.typename.split(':'))
     url = url + "wms?request=getcapabilities&version=1.1.0"
     try:
         xml = urlopen(url).read()

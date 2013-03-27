@@ -123,7 +123,7 @@ def import_layer(conn, layer_tempdir, layer_name, owner_name,
                 cat.save(cat_layer)
 
     # reload catalog
-    Layer.objects.gs_catalog.http.request(settings.GEOSERVER_BASE_URL + "rest/reload",'POST')
+    Layer.objects.gs_catalog.http.request(settings.INTERNAL_GEOSERVER_BASE_URL + "rest/reload",'POST')
 
     if do_django_layer_save:
         # now we can create the django model - must be done last when gscatalog is ready
