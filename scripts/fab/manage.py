@@ -22,10 +22,10 @@ if not os.path.exists(env.data_dir):
 #
 def lscript(name):
     with lcd(mapstory):
-        local('PYTHONPATH=.. python scripts/%s' % name)
+        local('DJANGO_SETTINGS_MODULE=mapstory.settings PYTHONPATH=.. python scripts/%s' % name)
         
 def script(name):
-    virtualenv('python mapstory/scripts/%s' % name)
+    virtualenv('DJANGO_SETTINGS_MODULE=mapstory.settings PYTHONPATH=%s python mapstory/scripts/%s' % (user_home, name))
 
 def virtualenv(command):
     with cd(user_home):
