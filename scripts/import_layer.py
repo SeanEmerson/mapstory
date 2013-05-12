@@ -75,7 +75,7 @@ def import_layer(gs_data_dir, conn, layer_tempdir, layer_name, owner_name, gs_us
     for ws in os.listdir(temppath('workspaces')):
         for store_name in os.listdir(temppath('workspaces',ws)):
             for layer_name in os.listdir(temppath('workspaces',ws,store_name)):
-                gs_layer_url = "{0}/geoserver/rest/styles/".format(settings.GEOSERVER_BASE_URL)#workspaces/{1}/{2}/{3}".format(settings.GEOSERVER_BASE_URL, ws, store_name, layer_name)
+                gs_layer_url = "{0}/geoserver/rest/styles/".format(settings.GEOSERVER_BASE_URL)
                 # Try loading the easy way first
                 gs_layer_data = "<featureType><name>{0}</name></featureType>".format(layer_name)
                 r = requests.post(gs_layer_url, data=gs_layer_data, auth=(gs_user, gs_pass), headers=layer_headers)                
