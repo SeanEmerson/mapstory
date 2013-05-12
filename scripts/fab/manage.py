@@ -42,5 +42,5 @@ def get_layer(layer):
     pkg = '%s-extract.zip' % layer
     rpkg = '%s/%s' % (user_home,pkg)
     get(rpkg,'.')
-    lscript('import_layer.py -d %s %s' % (env.data_dir, pkg))
+    lscript('import_layer.py -d %s -u %s -p %s %s' % (env.data_dir, env.gs_user, env.gs_pass, pkg))
     sudo('rm %s' % rpkg,user = env.deploy_user)

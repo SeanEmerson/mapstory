@@ -14,6 +14,9 @@ import psycopg2
 import os
 import tempfile
 import shutil
+import glob
+import requests
+import xml.etree.ElementTree as ET
 
 from update_thumb_specs import make_thumbnail_updater
 
@@ -27,7 +30,7 @@ def _get_user(**kw):
         return None
 
 @transaction.commit_on_success
-def import_layer(gs_data_dir, conn, layer_tempdir, layer_name, owner_name,
+def import_layer(gs_data_dir, conn, layer_tempdir, layer_name, owner_name, gs_user, gs_pass,
                  no_password=False, chown_to=None, do_django_layer_save=True,
                  th_from_string=None, th_to_string=None):
 
@@ -60,29 +63,35 @@ def import_layer(gs_data_dir, conn, layer_tempdir, layer_name, owner_name,
     cursor.execute("delete from geometry_columns where f_table_schema='%s' and f_table_name='%s'" % (geom_cols[1],geom_cols[2]))
     cursor.execute('insert into geometry_columns VALUES(%s)' % ','.join(["'%s'" % v for v in geom_cols]))
 
-    #copy in styles
-    for f in os.listdir(temppath('styles')):
-        shutil.copy(temppath('styles',f),gspath('styles'))
+    # To the stylemobile!
+    gs_style_url = "{0}/rest/workspaces/geonode/styles/".format(settings.GEOSERVER_BASE_URL)
+    style_headers = {'content-type': 'application/vnd.ogc.sld+xml'}
+    for f in glob.glob("%s/*.sld" % temppath('styles')):
+        sld = open(f, 'r').read()
+        r = requests.post(gs_style_url, data=sld, auth=(gs_user, gs_pass), headers=style_headers)
 
-    # and other geoserver info
+    # Now let's load the layers
+    layer_headers = {'content-type': 'text/xml'}
     for ws in os.listdir(temppath('workspaces')):
         for store_name in os.listdir(temppath('workspaces',ws)):
             for layer_name in os.listdir(temppath('workspaces',ws,store_name)):
-                dest_dir = gspath('workspaces', ws, store_name, layer_name)
-                if not os.path.exists(dest_dir):
-                    os.makedirs(dest_dir)
-                fdir = temppath('workspaces', ws, store_name, layer_name)
-                for f in os.listdir(fdir):
-                    shutil.copy(os.path.join(fdir,f), dest_dir)
-            
-    if chown_to:
-        from pwd import getpwnam
-        userid = getpwnam(chown_to)[2]
-        for root, dirs, files in os.walk(gspath()):
-            os.chown(root, userid, -1)
-            for f in files:
-                os.chown(os.path.join(root, f), userid, -1)
-
+                gs_layer_url = "{0}/geoserver/rest/styles/".format(settings.GEOSERVER_BASE_URL)#workspaces/{1}/{2}/{3}".format(settings.GEOSERVER_BASE_URL, ws, store_name, layer_name)
+                # Try loading the easy way first
+                gs_layer_data = "<featureType><name>{0}</name></featureType>".format(layer_name)
+                r = requests.post(gs_layer_url, data=gs_layer_data, auth=(gs_user, gs_pass), headers=layer_headers)                
+                if not r.ok:
+                    # Oh No. Something went wrong. Let's try defining attributes before giving up
+                    layer_xml = ET.parse(temppath('workspaces',ws,store_name,layer_name,'featuretype.xml')).getroot()
+                    # Remove unneeded parts from xml
+                    for namespace_element in layer_xml.findall('namespace'):
+                        layer_xml.remove(namespace_element)
+                    for id_element in layer_xml.findall('id'):
+                        layer_xml.remove(id_element)
+                    # Now change those pesky little custom dates to the underlying big int typename
+                    for attrib_binding in layer_xml.findall('binding'):
+                        if attrib_binding.text == "org.geotools.data.postgis.PostGISDialect$XDate":
+                            attrib_binding.text = "java.math.BigInteger"
+                    r = requests.post(gs_layer_url, data=ET.tostring(layer_xml), auth=(gs_user, gs_pass), headers=layer_headers)
     # reload catalog
     Layer.objects.gs_catalog.http.request(settings.GEOSERVER_BASE_URL + "rest/reload",'POST')
 
@@ -189,6 +198,14 @@ if __name__ == '__main__':
                       dest='owner_name',
                       help='Set the layer owner to a user by this name - must exist',
                       )
+    parser.add_option('-u', '--gs-user',
+                      dest='gs_user',
+                      help='GeoServer User to import data with.',
+                      )
+    parser.add_option('-p', '--gs-pass',
+                      dest='gs_pass',
+                      help='GeoServer Password to import data with.',
+                      )
 
     (options, args) = parser.parse_args()
     if len(args) != 1:
@@ -211,7 +228,8 @@ if __name__ == '__main__':
     success = False
     try:
         import_layer(options.data_dir, conn, tempdir, layer_name,
-                     options.owner_name, options.no_password, options.chown_to,
+                     options.owner_name, options.gs_user, options.gs_pass,
+                     options.no_password, options.chown_to,
                      options.do_django_layer_save,
                      options.th_from_string, options.th_to_string)
         success = True
