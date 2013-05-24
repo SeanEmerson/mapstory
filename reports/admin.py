@@ -17,8 +17,9 @@ def export_via_model(model, request, queryset, fields=None, exclude=None):
         response['Content-Disposition'] = \
             'attachment; filename=%s.csv' % unicode(opts).replace('.', '_')
 
+        field_names = list(field_names)
         writer = csv.DictWriter(response, field_names)
-        writer.writeheader()
+        writer.writer.writerow(field_names)
 
         for obj in queryset:
             writer.writerow(
