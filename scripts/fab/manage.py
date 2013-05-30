@@ -1,3 +1,15 @@
+'''
+To use:
+
+  fab -f scripts/fab/manage.py -c .fab.dev get_layer:SlateGunDeaths
+
+Where my .fab.dev config file had this inside:
+
+  user = <ssh username>
+  key_filename = /home/en/.ssh/id_rsa
+  port = <the port to use for ssh>
+
+'''
 from fabric.operations import *
 from fabric.context_managers import *
 from fabric.api import *
@@ -42,5 +54,13 @@ def get_layer(layer):
     pkg = '%s-extract.zip' % layer
     rpkg = '%s/%s' % (user_home,pkg)
     get(rpkg,'.')
-    lscript('import_layer.py -d %s -u %s -p %s %s' % (env.data_dir, env.gs_user, env.gs_pass, pkg))
+    lscript('import_layer.py %s' % (pkg, ))
+    sudo('rm %s' % rpkg,user = env.deploy_user)
+
+def get_map(id):
+    pkg = 'map-%s-extract.zip' % id
+    script('export_maps.py %s' % pkg)
+    rpkg = '%s/%s' % (user_home,pkg)
+    get(rpkg,'.')
+    lscript('import_maps.py %s' % (pkg, ))
     sudo('rm %s' % rpkg,user = env.deploy_user)
