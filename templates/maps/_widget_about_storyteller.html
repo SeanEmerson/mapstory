@@ -6,8 +6,8 @@
     <div class="clearfix mrg-btm">
         {% avatar map.owner %}
         <div style="width:184px" class="pull-right clearfix">
-            <p style="font-weight: bold">{{ contact.display_name }} {% if contact.organization %},{% endif %} {{contact.organization}}</p>
-            <p>{{ contact.blurb }}</p>
+            <p style="font-weight: bold">{{ contact.display_name }} {% if contact.organization %},{% endif %} {{contact.organization|default:''}}</p>
+            <p>{{ contact.blurb|default:'' }}</p>
         </div>
     </div>
     <a href="{% url about_storyteller map.owner.username %}" class="read-more">Read more about this Storyteller</a>
