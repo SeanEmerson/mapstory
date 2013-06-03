@@ -16,7 +16,6 @@ import os
 import tempfile
 import shutil
 import glob
-import requests
 import xml.etree.ElementTree as ET
 
 from update_thumb_specs import make_thumbnail_updater
