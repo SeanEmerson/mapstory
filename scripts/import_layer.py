@@ -13,6 +13,7 @@ from optparse import OptionParser
 import json
 import psycopg2
 import os
+import subprocess
 import tempfile
 import shutil
 import glob
@@ -53,7 +54,7 @@ def import_layer(conn, layer_tempdir, layer_name, owner_name,
         temppath('layer.dump'),
     )
     # can't check return value since pg_restore will complain if any drop statements fail :(
-    os.system(restore_string)
+    subprocess.call(restore_string, shell=True, env={'PGPASSWORD':settings.DB_DATASTORE_PASSWORD})
 
     # rebuild the geometry columns entry
     with open(temppath("geom.info")) as fp:
@@ -92,7 +93,7 @@ def import_layer(conn, layer_tempdir, layer_name, owner_name,
                     # create the layer by reading the xml, stripping some specific
                     # ids, and posting to REST endpoint
                     # @todo didn't see nice way to do this via gsconfig
-                    gs_feature_url = "%(base)s/rest/workspaces/%(workspace)s/datastores/%(datastore)s/featuretypes" % dict(
+                    gs_feature_url = "%(base)srest/workspaces/%(workspace)s/datastores/%(datastore)s/featuretypes" % dict(
                         base = settings.GEOSERVER_BASE_URL,
                         workspace = ws,
                         datastore = store_name
@@ -102,7 +103,7 @@ def import_layer(conn, layer_tempdir, layer_name, owner_name,
                     for el in ('id', 'namespace', 'store'):
                         feature_xml.remove(feature_xml.find(el))
                     headers, response = cat.http.request(gs_feature_url, "POST", ET.tostring(feature_xml), { "Content-Type": "application/xml" })
-                    if headers.status != '201':
+                    if str(headers.status) != '201':
                         print gs_feature_url
                         print response
                         raise ImportException("Invald response from REST, layer creation: %s" % headers.status)
