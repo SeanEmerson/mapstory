@@ -24,6 +24,6 @@ def django_up():
     ok_response_from(_config['DJANGO_URL'])
 
 
-@check(email_on_error=True)
+@check(email_on_error=True, announce='geoserver')
 def geoserver_up():
     ok_response_from(_config['GEOSERVER_BASE_URL'])

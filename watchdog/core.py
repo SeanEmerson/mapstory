@@ -7,6 +7,7 @@ from mapstory.watchdog.handlers import MemoryHandler
 from mapstory.watchdog.models import get_current_state
 from mapstory.watchdog.models import format_datestring
 from mapstory.watchdog.models import Run
+from mapstory.watchdog.util import geoserver_trouble_announcement
 import functools
 import inspect
 import logging
@@ -134,8 +135,13 @@ def _run_check(func, *args, **kw):
         logger.warning('Check "%s" failed:\n%s', func.__name__, ex)
         logger.exception('Exception: %s -> %s' % (type(ex).__name__, ex))
         _errors.append(ex)
-        if isinstance(ex, RestartRequired):
-            raise ex
+
+    announce = kw.get('announce')
+    if announce == 'geoserver':
+        geoserver_trouble_announcement(ex is not None)
+
+    if isinstance(ex, RestartRequired):
+        raise ex
     if ex and 'restart_on_error' in kw:
         raise RestartRequired(ex)
     if ex and 'email_on_error' in kw:
