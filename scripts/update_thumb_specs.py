@@ -4,7 +4,14 @@
 from geonode.maps.models import MapLayer
 from geonode.maps.models import Thumbnail
 from optparse import OptionParser
+import urlparse
+import re
 import sys
+
+def make_matcher(from_string):
+    parts = urlparse.urlparse(from_string)
+    # build a pattern that matches hostname and optional port
+    return re.compile('%s://%s(:\d+)?/' % (parts.scheme, parts.netloc))
 
 def make_updater(from_string, to_string, attr):
     """make an update function that given a model, fetches the attr,
@@ -12,7 +19,8 @@ def make_updater(from_string, to_string, attr):
     model if the replace caused a change"""
     def updater(model):
         orig_value = getattr(model, attr)
-        new_value = orig_value.replace(from_string, to_string)
+        matcher = make_matcher(from_string)
+        new_value = matcher.sub(to_string, orig_value)
         if orig_value != new_value:
             print ('updating %s: %s - attribute: %s'
                    % (model._meta.object_name, model.id, attr))

@@ -59,8 +59,9 @@ def get_layer(layer):
 
 def get_map(id):
     pkg = 'map-%s-extract.zip' % id
-    script('export_maps.py %s' % pkg)
+    script('export_maps.py %s %s' % (pkg, id))
     rpkg = '%s/%s' % (user_home,pkg)
     get(rpkg,'.')
-    lscript('import_maps.py %s' % (pkg, ))
+    # the -f flag tells what urls to modify, assume the host name
+    lscript('import_maps.py -f "%s" %s' % (env.host, pkg))
     sudo('rm %s' % rpkg,user = env.deploy_user)

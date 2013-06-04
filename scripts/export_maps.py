@@ -68,6 +68,10 @@ if options.input_file:
                 else:
                     raise ValueError('Unknown input line: %s' % line)
 
+if not map_ids:
+    print 'Please provide a map id or file to read from'
+    sys.exit(42)
+
 # fetch maps, layers and map comments from database
 def fetch_map(map_id):
     try:
@@ -112,13 +116,9 @@ authors = filter(None, map(fetch_author, map_comments))
 publishing_statuses = map(fetch_map_publishingstatus, maps)
 
 def layers_from_map(m):
-    layers = []
-    for maplayer in m.layers:
-        try:
-            layer = Layer.objects.get(typename=maplayer.name)
-            layers.append(layer)
-        except Layer.DoesNotExist:
-            pass
+    layers = list(m.local_layers)
+    if not layers:
+        print 'no local layers in this map!'
     # also include the annotations layer if it exists
     annotation_layer_typename = "geonode:_map_%s_annotations" % m.id
     try:

@@ -23,6 +23,10 @@ from update_thumb_specs import make_maplayer_updater
 def import_maps(conn, zipfile,
                 no_password=False, chown_to=None, do_django_layer_save=True,
                 from_string=None, to_string=None):
+    # unless specified, assume importing to local setup
+    if to_string is None:
+        to_string = settings.SITEURL
+
     tempdir = tempfile.mkdtemp()
     temppath = lambda *p: os.path.join(tempdir, *p)
     os.system('unzip %s -d %s' % (zipfile, tempdir))
@@ -37,7 +41,8 @@ def import_maps(conn, zipfile,
 
     def import_models(path, add_owner=False):
         with open(path, 'r') as f:
-            models = serializers.deserialize('json', f)
+            # deserialize returns a generator, read everything
+            models = list(serializers.deserialize('json', f))
             for model in models:
                 if add_owner:
                     owner = User.objects.filter(pk=model.object.owner_id)
@@ -45,6 +50,7 @@ def import_maps(conn, zipfile,
                         model.object.owner = User.objects.get(pk=1)
 
                 model.save()
+                print 'imported %s=%s' % (model.object.__class__.__name__, model.object.pk)
             return models
 
     print 'importing maps'
@@ -82,6 +88,8 @@ def import_maps(conn, zipfile,
 
     if from_string is not None and to_string is not None:
         print 'adjusting maplayer params'
+        if to_string[-1] != '/':
+            to_string += '/'
         updater = make_maplayer_updater(from_string, to_string)
         for maplayer_model in maplayer_models:
             try:
