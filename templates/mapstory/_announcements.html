@@ -11,6 +11,7 @@
             <button type="button" class="close" data-dismiss="alert" data-announceid="{{announcement.id}}">&times;</button>
         </form>
         {% endif %}
+        <span class="pull-right">{{ announcement.creation_date }}</span>
         <strong><a href = '{% url announcements_detail announcement.id %}'>{{ announcement.title }}</strong></a><br/>
         {{ announcement.content }}
     </div>
