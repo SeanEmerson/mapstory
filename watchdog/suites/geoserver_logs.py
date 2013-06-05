@@ -25,10 +25,20 @@ def check_geoserver_log():
         logfile_model.checksum = checksum(sections, start, end)
         logfile_model.save()
     return [subcheck(fn, name, sections)
-            for fn, name in [(_out_of_memory, 'Out of Memory')]]
+            for fn, name in [(_out_of_permgen_memory, 'Out of PermGen Memory'),
+                             (_out_of_memory, 'Out of heap space')]]
 
 
 def _out_of_memory(sections):
+    for section in sections:
+        for line in section:
+            if 'java.lang.OutOfMemoryError: Java heap space' in line:
+                cnt += 1
+    if cnt > 5:
+        raise Exception('Geoserver appears to be struggling with memory')
+
+
+def _out_of_permgen_memory(sections):
     for section in sections:
         for line in section:
             if 'java.lang.OutOfMemoryError: PermGen space' in line:

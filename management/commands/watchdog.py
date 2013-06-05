@@ -5,8 +5,12 @@ from mapstory.watchdog.core import _run_watchdog_suites
 from mapstory.watchdog.core import clean_runs
 from mapstory.watchdog.core import list_suites
 from mapstory.watchdog.core import summarize
+from mapstory.watchdog.core import set_config
+from mapstory.watchdog.core import _config
 from mapstory.watchdog.logs import set_log_state_to_end_of_file
+from mapstory.watchdog.logs import log_scan
 import sys
+import os
 
 
 class Command(BaseCommand):
@@ -19,6 +23,13 @@ class Command(BaseCommand):
             print ('need one or more suites to run, or "mark_log_ok", '
                    '"list", or "clean_runs <days>"')
             sys.exit(1)
+
+        set_config()
+        for k in _config:
+            envkey = 'WATCHDOG_%s' % k
+            if envkey in os.environ:
+                _config[k] = os.environ[envkey]
+
         if args[0] == 'mark_log_ok':
             set_log_state_to_end_of_file()
         elif args[0] == 'list':
@@ -52,5 +63,7 @@ class Command(BaseCommand):
                 start_time = plain_day - delta
                 end_time = plain_day
                 summarize(start_time, end_time)
+        elif args[0] == 'log_scan':
+            log_scan()
         else:
             _run_watchdog_suites(*args)

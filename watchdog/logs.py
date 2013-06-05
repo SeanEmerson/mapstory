@@ -1,27 +1,62 @@
 # logfile parsing routines
+from django.core.mail import EmailMessage
 
 from mapstory.watchdog.core import _config
 from mapstory.watchdog.core import set_config
 from mapstory.watchdog.models import get_logfile_model
+from datetime import date
 import hashlib
+import itertools
 
-LEVELS = set(['INFO', 'WARN', 'DEBUG', 'ERROR'])
+LEVELS = set( [ ' %s ' for s in ['WARN', 'ERROR']])
+
+_scan_exclude = (
+    'org.geoserver.platform.ServiceException: Could not determine geoserver request from http request org.geoserver.monitor.MonitorServletRequest',
+)
 
 
-def is_logger_line(line):
-    return any([(' %s ' % level) in line
-                for level in LEVELS])
+def is_logger_line(line, levels):
+    return any([level in line
+                for level in levels])
 
 
-def log_sections(fileobj):
+def _not_excluded(section):
+    is_excluded = lambda line: any([ line.find(e) >= 0 for e in _scan_exclude])
+    return not any([is_excluded(line) for line in section])
+
+
+def log_scan():
+    logpath = _config['GEOSERVER_LOG']
+    today = date.today().strftime('%Y-%m-%d')
+    with open(logpath, 'r') as fp:
+        lines = iter(fp)
+        for l in lines:
+            if l.startswith(today):
+                break
+        sections = log_sections(itertools.chain([l], lines), gather_stack=1, levels=[' ERROR '])
+    sections = filter(_not_excluded, sections)
+    sections = [ '\t'.join(sub) for sub in sections ]
+    body = '\n'.join(sections)
+    EmailMessage(
+        'Daily Error Summary',
+        body,
+        _config['FROM'],
+        _config['TO'],
+    ).send()
+
+
+def log_sections(fileobj, gather_stack=None, levels=None):
+    if levels is None:
+        levels = LEVELS
     sections = []
     next_section = []
+    gather_stack = gather_stack if gather_stack is not None else 10
     for line in fileobj:
-        if is_logger_line(line):
+        if is_logger_line(line, levels):
             if next_section:
                 sections.append(next_section)
             next_section = [line]
-        else:
+        elif gather_stack >= len(next_section):
             next_section.append(line)
     if next_section:
         sections.append(next_section)
@@ -67,12 +102,12 @@ def is_valid(fileobj, logfile_model):
         fileobj.seek(cur)
 
 
-def read_next_sections(fileobj, logfile_model):
+def read_next_sections(fileobj, logfile_model, gather_stack=None):
     offset = (is_valid(fileobj, logfile_model)
               and logfile_model.offset_end
               or 0)
     fileobj.seek(offset)
-    sections = log_sections(fileobj)
+    sections = log_sections(fileobj, gather_stack=gather_stack)
     offset_end = fileobj.tell()
     return dict(
         offset_start=offset,
