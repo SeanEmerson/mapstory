@@ -10,14 +10,8 @@ from xml.etree.ElementTree import fromstring
 
 def suite():
     return (
-        get_capabilities,
         get_layer_capabilities,
     )
-
-
-# disabled @check
-def get_capabilities():
-    Layer.objects.get_wms()
 
 
 @check_many
