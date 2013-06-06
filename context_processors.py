@@ -15,6 +15,16 @@ def _resources():
 
 _ua = re.compile('MSIE (\d+)\.')
 
+_page_settings = {
+    'design_mode' : settings.DESIGN_MODE,
+    'enable_analytics' : settings.ENABLE_ANALYTICS,
+    'ACCOUNT_OPEN_SIGNUP' : getattr(settings, 'ACCOUNT_OPEN_SIGNUP', False),
+    'ENABLE_SOCIAL_LOGIN' : getattr(settings, 'ENABLE_SOCIAL_LOGIN', False),
+    'ENABLE_SHARE_THIS' : getattr(settings, 'ENABLE_SHARE_THIS', True),
+    'ENABLE_USER_VOICE' : getattr(settings, 'ENABLE_USER_VOICE', True),
+    'cache_time': 60,
+}
+
 def page(req):
     '''provide base template context'''
     # detect old browsers - probably should fix to use more robust framework
@@ -38,13 +48,10 @@ def page(req):
     page = {
         'sections' : _sections(),
         'resources' : _resources(),
-        #@todo temp for design work
-        'design_mode' : settings.DESIGN_MODE,
-        # we could do this through debug but it's nicer to have finer grained control
-        'enable_analytics' : settings.ENABLE_ANALYTICS,
         'old_browser' : old_browser
     }
-    allow_signup = getattr(settings, 'ACCOUNT_OPEN_SIGNUP', False)
-    enable_social_login = getattr(settings, 'ENABLE_SOCIAL_LOGIN', False)
-    return {'page':page, 'cache_time':60, 'ACCOUNT_OPEN_SIGNUP': allow_signup,
-            'ENABLE_SOCIAL_LOGIN': enable_social_login}
+
+    ctx = dict(_page_settings)
+    ctx['page'] = page
+    
+    return ctx
