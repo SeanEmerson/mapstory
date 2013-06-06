@@ -30,6 +30,7 @@ def check_geoserver_log():
 
 
 def _out_of_memory(sections):
+    cnt = 0
     for section in sections:
         for line in section:
             if 'java.lang.OutOfMemoryError: Java heap space' in line:
