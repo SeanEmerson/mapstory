@@ -54,8 +54,10 @@ class NamedRedirect(RedirectView):
 
 urlpatterns = patterns('',
     # inject our form into these views
-    ('^profiles/edit', 'profiles.views.edit_profile', {'form_class': ProfileForm,}),
-    ('^profiles/create', 'profiles.views.create_profile', {'form_class': ProfileForm,}),
+    ('^profiles/edit/$', 'profiles.views.edit_profile', {'form_class': ProfileForm,}),
+    ('^profiles/create/$', 'profiles.views.create_profile', {'form_class': ProfileForm,}),
+    # and redirect the profile list
+    url('^profiles/$', NamedRedirect.as_view(name='search_owners')),
 )
 
 urlpatterns += patterns('mapstory.views',
