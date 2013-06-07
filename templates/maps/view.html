@@ -108,7 +108,7 @@ gxp.form.FontComboBox.prototype.defaultFont = 'Arial';
 </div>
 <div id="templates">
   <div id="more-info-tpl"><a class='link' href='{permalink}'>{% trans "View info" %}</a></div>
-  <div id="title-tpl"><a class='maplist' href='{% url maps_search %}'>{% trans "Maps" %}</a> / <a href="{permalink}">{title}</a></div>
+  <div id="title-tpl"><a class='maplist' href='{% url search_maps %}'>{% trans "Maps" %}</a> / <a href="{permalink}">{title}</a></div>
 </div>
 {% comment %}new map view has no map{% endcomment %}
 {% if map %}{% map_view_hitcount map %}{% endif %}

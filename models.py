@@ -418,13 +418,21 @@ class PublishingStatus(models.Model):
     def save(self,*args,**kw):
         obj = self.layer or self.map
         if not obj: raise Exception('invalid publish status, no obj')
+
+        # usually won't happen except in fixture loading?
+        owner = None
+        try:
+            owner = obj.owner
+        except User.DoesNotExist:
+            pass
+        if owner is None: return
+
         level = obj.LEVEL_READ
         if self.status == PUBLISHING_STATUS_PRIVATE:
             level = obj.LEVEL_NONE
         obj.set_gen_level(ANONYMOUS_USERS, level)
         obj.set_gen_level(AUTHENTICATED_USERS, level)
-        if obj.owner: # usually won't happen except in fixture loading?
-            obj.set_user_level(obj.owner, obj.LEVEL_ADMIN)
+        obj.set_user_level(owner, obj.LEVEL_ADMIN)
         models.Model.save(self, *args)
         
         

@@ -19,7 +19,8 @@ current_request = threading.local()
 
 def user():
     req = getattr(current_request, 'request', None)
-    return req.user if req else None
+    # if loading via fixture, no user will be set in 'WSGIRequest' req
+    return getattr(req, 'user', None) if req else None
 
 class GlobalRequestMiddleware(object):
     def process_request(self, request):
