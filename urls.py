@@ -86,10 +86,6 @@ urlpatterns += patterns('mapstory.views',
     url(r"^invites/", include("kaleo.urls")),
     url(r'^oembed/', include("oembed.urls")),
 
-    url(r'^view-annotations/$',
-        direct_to_template,
-        {'template': 'annotations.html'}),
-
     (r'^data/create_annotations_layer/(?P<mapid>\d+)$','create_annotations_layer'),
     url(r'^mapstory/donate/$',direct_to_template, {"template":"mapstory/donate.html"},name='donate'),
     url(r'^mapstory/thanks/$',direct_to_template, {"template":"mapstory/thanks.html"}),

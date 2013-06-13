@@ -6,7 +6,7 @@
     color: #fff;
     border-radius: 5px;
     background: #232D38;
-    top: 50px;
+    top: 30px;
 }
 
 #ms-search-widget fieldset {
@@ -32,7 +32,6 @@
 
 #ms-search-layers {
     padding: 10px;
-    height: 500px;
     overflow: auto;
 }
 
