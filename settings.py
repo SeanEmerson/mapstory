@@ -342,6 +342,8 @@ ABSOLUTE_URL_OVERRIDES = {
 
 ENABLE_SOCIAL_LOGIN = False 
 
+USE_GEONETWORK = False
+
 try:
     from local_settings import *
 except ImportError:
