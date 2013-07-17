@@ -47,7 +47,7 @@ You should fill out your profile now. While this is not mandatory, your account 
 
 If you have not filled out your profile, you will see a warning on your profile page.
 
-To fill out your profile, click **Profile** and then **Edit profile information**.
+To fill out your profile,  click **Profile** and then **Edit profile information**.
 
 
 .. _5minmap:
